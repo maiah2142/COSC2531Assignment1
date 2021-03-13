@@ -91,15 +91,17 @@ def printReceipt(custName, productName, price, quantity):
     sys.stdout.write("Total price: $" + str(formatPrice(calcTotalPrice(price, quantity)))\
             + "\n\n")
 
-#main init
-if __name__ == '__main__':
-    #temporary customer list
-    listCustomers = ["John Smith", "Jane Doe"]
-    #temporary product list
-    listProducts = ["short black", "cappuccino", "latte"]
-    #temporary product list
-    listPrices = [2.90, 1]
+def printMenu():
+    sys.stdout.write("Please enter an option:\n")
+    sys.stdout.write("1. Make a new purchase\n")
+    sys.stdout.write("2. Replace product list\n")
+    sys.stdout.write("3. Replace product prices\n")
+    sys.stdout.write("4. Display all existing customers\n")
+    sys.stdout.write("5. Display all products and prices\n\n")
+    sys.stdout.write("0. Exit\n\n")
+    sys.stdout.write("> ")
 
+def makeOrder(listCustomers, listProducts, listPrices):
     #get input from customer
     custName = getName()
     productName = getProduct(listProducts)
@@ -113,3 +115,21 @@ if __name__ == '__main__':
     printReceipt(custName, productName,\
             calcUnitPrice(discountCustomer, productName, listProducts, listPrices),\
             quantity)
+
+#main init
+if __name__ == '__main__':
+    #temporary customer list
+    listCustomers = ["John Smith", "Jane Doe"]
+    #temporary product list
+    listProducts = ["short black", "cappuccino", "latte"]
+    #temporary product list
+    listPrices = [2.90, 1]
+
+    while True:
+        printMenu()
+        option = input()
+        if option == "1":
+            makeOrder(listCustomers, listProducts, listPrices)
+        elif option == "0":
+            sys.stdout.write("Goodbye.\n")
+            quit()
