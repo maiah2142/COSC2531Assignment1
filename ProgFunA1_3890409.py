@@ -66,12 +66,15 @@ def calcUnitPrice(existingCustomer, productName, listProducts, listPrices):
     index = listProducts.index(productName)
     #get price using product index
     try:
-        price = listPrices[index]
-    #if no price listed, outside of list
+        if index > len(listPrices) or index < 0:
+            #if no price listed, outside of list
+            return 0.0
+        else:
+            price = listPrices[index]
     except:
-        #set price to 0
-        return 0
-    #apply 10% discount if existing customer
+        sys.stdout.write("An error has occurred at pricing.\n")
+        return 0.0
+    #if existing customer apply 10% discount
     if existingCustomer:
         price *= 0.9
     return price
@@ -116,6 +119,26 @@ def makeOrder(listCustomers, listProducts, listPrices):
             calcUnitPrice(discountCustomer, productName, listProducts, listPrices),\
             quantity)
 
+#function WIP, list is out of scope
+#figure out later how to do this without classes
+#or maybe ask if classes are allowed to be used?
+def newProductList():
+    sys.stdout.write("Please enter a new list of products separated by commas:\n")
+    newProducts = input().split(",")
+    listProducts = newProducts
+    #return newProducts
+
+#prints product list
+def printProducts(listProducts):
+    sys.stdout.write("Current products: ")
+    for i in range(len(listProducts)):
+        sys.stdout.write(listProducts[i])
+        if not i == len(listProducts) - 1:
+            sys.stdout.write(", ")
+        else:
+            sys.stdout.write(".\n\n")
+
+
 #main init
 if __name__ == '__main__':
     #temporary customer list
@@ -128,8 +151,12 @@ if __name__ == '__main__':
     while True:
         printMenu()
         option = input()
-        if option == "1":
+        if   option == "1":
             makeOrder(listCustomers, listProducts, listPrices)
+        elif option == "2":
+            newProductList()
+        elif option == "5":
+            printProducts(listProducts)
         elif option == "0":
             sys.stdout.write("Goodbye.\n")
             quit()
