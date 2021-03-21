@@ -10,7 +10,8 @@ def getName():
     in order infinitely loop the prompt to the user
     if they enter it incorrectly.
     """
-    while True:
+    loop = True
+    while loop:
         sys.stdout.write("Please enter the name of the customer: ")
         custName = input()
         """
@@ -23,7 +24,7 @@ def getName():
         """
         #Checks if input is all alpha characters.
         if re.match('([A-Z][a-z]*)', custName):
-            break
+            loop = False
         else:
             sys.stdout.write("The name must start with a capital letter and the name must only contain alphabet characters or spaces.\n")
     return custName
@@ -35,12 +36,13 @@ def getProduct(listProducts):
     in order infinitely loop the prompt to the user
     if they enter it incorrectly.
     """
-    while True:
+    loop = True
+    while loop:
         sys.stdout.write("Please enter the name of a product: ")
         productName = input()
         #checks to see if product exists in product list
         if productName in listProducts:
-            break
+            loop = False
         else:
             sys.stdout.write("That product does not exist.\n")
     return productName
@@ -52,15 +54,16 @@ def getQuantity():
     in order infinitely loop the prompt to the user
     if they enter it incorrectly.
     """
-    while True:
+    loop = True
+    while loop:
         sys.stdout.write("Please enter quantity you wish to order: ")
         #checks if input is an integer
-        try:
-            quantity = int(input())
-            break
-        except:
+        quantity = input()
+        if quantity.isdigit():
+            loop = False
+        else:
             sys.stdout.write("Please enter a whole number.\n")
-    return quantity
+    return int(quantity)
 
 #checks to see if customer's name exists in the existing customers list
 def isExistingCustomer(custName, listCustomers):
@@ -103,6 +106,7 @@ def printReceipt(custName, productName, price, quantity):
     sys.stdout.write("Total price: $" + str(formatPrice(calcTotalPrice(price, quantity)))\
             + "\n\n")
 
+#print the menu options
 def printMenu():
     sys.stdout.write("Please enter an option:\n")
     sys.stdout.write("1. Make a new purchase\n")
@@ -113,6 +117,7 @@ def printMenu():
     sys.stdout.write("0. Exit\n\n")
     sys.stdout.write("> ")
 
+#ask for input to make order
 def makeOrder(listCustomers, listProducts, listPrices):
     #get input from customer
     custName = getName()
