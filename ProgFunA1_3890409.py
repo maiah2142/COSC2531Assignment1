@@ -1,22 +1,27 @@
 import sys
 import re
 
+debug = True
+
 #get name input from user
 def getName():
-    #While loop with an always true condition is used
-    #in order infinitely loop the prompt to the user
-    #if they enter it incorrectly.
+    """
+    While loop with an always true condition is used
+    in order infinitely loop the prompt to the user
+    if they enter it incorrectly.
+    """
     while True:
         sys.stdout.write("Please enter the name of the customer: ")
         custName = input()
+        """
+        Regular expression is used to force the first letter
+        to be a capitalised alpha character while the rest of the
+        regex simply checks that it is an alpha character or space.
+        A better regex could probably be used in order to enforce
+        only a single space between words and to enforce a capital
+        letter infront of every new word.
+        """
         #Checks if input is all alpha characters.
-        #Regular expression is used to force the first letter
-        #to be a capitalised alpha character while the rest of the
-        #regex simply checks that it is an alpha character or space.
-        #A better regex could probably be used in order to enforce
-        #only a single space between words and to enforce a capital
-        #letter infront of every new word.
-        #FIX THIS LATER
         if re.match('([A-Z][a-z]*)', custName):
             break
         else:
@@ -25,9 +30,11 @@ def getName():
 
 #get product input from user
 def getProduct(listProducts):
-    #While loop with an always true condition is used
-    #in order infinitely loop the prompt to the user
-    #if they enter it incorrectly.
+    """
+    While loop with an always true condition is used
+    in order infinitely loop the prompt to the user
+    if they enter it incorrectly.
+    """
     while True:
         sys.stdout.write("Please enter the name of a product: ")
         productName = input()
@@ -40,9 +47,11 @@ def getProduct(listProducts):
 
 #get product quantity input from user
 def getQuantity():
-    #While loop with an always true condition is used
-    #in order infinitely loop the prompt to the user
-    #if they enter it incorrectly.
+    """
+    While loop with an always true condition is used
+    in order infinitely loop the prompt to the user
+    if they enter it incorrectly.
+    """
     while True:
         sys.stdout.write("Please enter quantity you wish to order: ")
         #checks if input is an integer
@@ -119,34 +128,61 @@ def makeOrder(listCustomers, listProducts, listPrices):
             calcUnitPrice(discountCustomer, productName, listProducts, listPrices),\
             quantity)
 
-#function WIP, list is out of scope
 #figure out later how to do this without classes
 #or maybe ask if classes are allowed to be used?
+"""
+I'm not sure if this is the best way to do things because it uses globals.
+I think defining a product class would be better but that seems outside the
+scope of this course at the moment.
+Perhaps using a dictionary could be good as well.
+"""
 def newProductList():
-    sys.stdout.write("Please enter a new list of products separated by commas:\n")
-    newProducts = input().split(",")
-    listProducts = newProducts
-    #return newProducts
+    #uses global in order to change the list of products
+    global listProducts
+    #get input
+    sys.stdout.write("Please enter a new list of products separated by spaces:\n")
+    productInput = input().split()
+    #error checking to see if all items in products are alphanumeric
+    flag = False
+    for item in productInput:
+        if not item.isalnum():
+            flag = True
+    if flag:
+        sys.stdout.write("Please use alphanumeric characters with each product separated by spaces.\n\n")
+    else:
+        #set new list
+        sys.stdout.write("New product list successfully set.\n\n")
+        listProducts = productInput
 
 #prints product list
 def printProducts(listProducts):
-    sys.stdout.write("Current products: ")
-    for i in range(len(listProducts)):
-        sys.stdout.write(listProducts[i])
-        if not i == len(listProducts) - 1:
-            sys.stdout.write(", ")
-        else:
-            sys.stdout.write(".\n\n")
-
+    #check if list is empty
+    if not listProducts:
+        sys.stdout.write("There are currently no products.\n\n")
+    else:
+        #print list as normal
+        sys.stdout.write("Current products: ")
+        for i in range(len(listProducts)):
+            sys.stdout.write(listProducts[i])
+            if not i == len(listProducts) - 1:
+                sys.stdout.write(", ")
+            else:
+                sys.stdout.write(".\n\n")
 
 #main init
 if __name__ == '__main__':
     #temporary customer list
-    listCustomers = ["John Smith", "Jane Doe"]
+    listCustomers =[]
     #temporary product list
-    listProducts = ["short black", "cappuccino", "latte"]
+    listProducts = []
     #temporary product list
-    listPrices = [2.90, 1]
+    listPrices = []
+
+    if debug:
+        listcustomers = ["John Smith", "Jane Doe"]
+        listProducts = ["shortblack", "cappuccino", "latte"]
+        listPrices = [2.90, 1]
+        print(listProducts)
 
     while True:
         printMenu()
