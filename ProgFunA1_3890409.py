@@ -144,20 +144,45 @@ Perhaps using a dictionary could be good as well.
 def newProductList():
     #uses global in order to change the list of products
     global listProducts
-    #get input
-    sys.stdout.write("Please enter a new list of products separated by spaces:\n")
-    productInput = input().split()
-    #error checking to see if all items in products are alphanumeric
-    flag = False
-    for item in productInput:
-        if not item.isalnum():
-            flag = True
-    if flag:
-        sys.stdout.write("Please use alphanumeric characters with each product separated by spaces.\n\n")
-    else:
-        #set new list
-        sys.stdout.write("New product list successfully set.\n\n")
-        listProducts = productInput
+
+    loop = True
+    while loop:
+        #get input
+        sys.stdout.write("Please enter a new list of products separated by spaces:\n")
+        productInput = input().split()
+
+        #flags to check for errors
+        flagChar = False
+        flagUnique = False
+
+        #checks if user input is unique
+        if not len(set(productInput)) == len(productInput): 
+            flagUnique = True
+        #error checking to see if all items in products are alphanumeric
+        for item in productInput:
+            if not item.isalnum():
+                flagChar = True
+                #break out of for loop if one error detected
+                break
+        """
+        the flags were made and separated from the checks in order to make reading the code
+        easier
+        """
+        #print relevant error messages to user
+        if flagChar:
+            sys.stdout.write("Please use alphanumeric characters with each product separated by spaces.\n")
+        if flagUnique:
+            sys.stdout.write("Please have every product be unqiue.\n")
+
+        #break out of loop if no errors/flags were detected
+        #this makes it so user cannot reenter input
+        if not flagChar and not flagUnique:
+            loop = False
+        sys.stdout.write("\n")
+
+    #set new list
+    sys.stdout.write("New product list successfully set.\n\n")
+    listProducts = productInput
 
 #prints product list
 def printProducts(listProducts):
