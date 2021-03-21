@@ -67,9 +67,12 @@ def getQuantity():
 
 #checks to see if customer's name exists in the existing customers list
 def isExistingCustomer(custName, listCustomers):
+    if debug: print(listCustomers)
     #true if existing, false if new
     if custName in listCustomers:
+        if debug: print("Existing!\n")
         return True
+    if debug: print("Not existing!\n")
     return False
 
 #calculate the price of single product with discount
@@ -184,6 +187,38 @@ def newProductList():
     sys.stdout.write("New product list successfully set.\n\n")
     listProducts = productInput
 
+def newPriceList():
+    #uses global in order to change the list of prices
+    global listPrices
+
+    loop = True
+    while loop:
+        #get input
+        sys.stdout.write("Please enter a new list of prices separated by spaces and without the $ symbol: ")
+        priceInput = input().split()
+
+        flagDecimal = False
+
+        #error checking to see if all items in products are alphanumeric
+        for item in priceInput:
+            if not item.isnumeric:
+                flagDecimal = True
+                #break out of for loop if one error detected
+                break
+
+        #print relevant error messages to user
+        if flagDecimal:
+            sys.stdout.write("Please use numbers for the prices.\n\n")
+        else:
+            loop = False
+
+    #set new list
+    floatListPrices = []
+    for item in priceInput:
+        floatListPrices.append(float(item))
+    sys.stdout.write("New price list successfully set.\n\n")
+    listPrices = floatListPrices
+
 #prints product list
 def printProducts(listProducts):
     #check if list is empty
@@ -209,7 +244,7 @@ if __name__ == '__main__':
     listPrices = []
 
     if debug:
-        listcustomers = ["John Smith", "Jane Doe"]
+        listCustomers = ["John Smith", "Jane Doe"]
         listProducts = ["shortblack", "cappuccino", "latte"]
         listPrices = [2.90, 1]
         print(listProducts)
@@ -221,6 +256,8 @@ if __name__ == '__main__':
             makeOrder(listCustomers, listProducts, listPrices)
         elif option == "2":
             newProductList()
+        elif option == "3":
+            newPriceList()
         elif option == "5":
             printProducts(listProducts)
         elif option == "0":
