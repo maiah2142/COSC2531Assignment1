@@ -1,7 +1,10 @@
 import sys
-import re
 
 debug = True
+
+#template for displaying error messages
+def printError(desc:str, e:str)->str:
+    sys.stdout.write("An error has occured with " + str(desc) + ", " + str(e) + ".\n")
 
 #get name input from user
 def getName():
@@ -14,23 +17,16 @@ def getName():
     while loop:
         sys.stdout.write("Please enter the name of the customer: ")
         custName = input()
-        """
-        Regular expression is used to force the first letter
-        to be a capitalised alpha character while the rest of the
-        regex simply checks that it is an alpha character or space.
-        A better regex could probably be used in order to enforce
-        only a single space between words and to enforce a capital
-        letter infront of every new word.
-        """
         #Checks if input is all alpha characters.
-        if re.match('([A-Z][a-z]*)', custName):
+        if custName.isalpha():
             loop = False
         else:
-            sys.stdout.write("The name must start with a capital letter and the name must only contain alphabet characters or spaces.\n")
+            sys.stdout.write("The name must start with a capital letter and the name " +\
+                    "must only contain alphabet characters or spaces.\n")
     return custName
 
 #get product input from user
-def getProduct(listProducts):
+def getProduct(listProducts:list)->str:
     """
     While loop with an always true condition is used
     in order infinitely loop the prompt to the user
@@ -59,10 +55,14 @@ def getQuantity():
         sys.stdout.write("Please enter quantity you wish to order: ")
         #checks if input is an integer
         quantity = input()
-        if quantity.isdigit():
-            loop = False
-        else:
-            sys.stdout.write("Please enter a whole number.\n")
+        try:
+            if quantity.isdigit():
+                loop = False
+            else:
+                sys.stdout.write("Please enter a whole number.\n")
+        except Exception as e:
+            printError("getting quantity input", str(e))
+            return
     return int(quantity)
 
 #checks to see if customer's name exists in the existing customers list
@@ -83,42 +83,49 @@ def calcUnitPrice(existingCustomer, productName, listProducts, listPrices):
     try:
         if index > len(listPrices) or index < 0:
             #if no price listed, outside of list
-            return 0.0
+            return
         else:
             price = listPrices[index]
-    except:
-        sys.stdout.write("An error has occurred at pricing.\n")
-        return 0.0
+    except Exception as e:
+        printError("calculating pricing", str(e))
+        return
     #if existing customer apply 10% discount
     if existingCustomer:
         price *= 0.9
     return price
 
 #mulitplies price by quantity
-def calcTotalPrice(price, quantity):
-    return price * quantity
+def calcTotalPrice(price:float, quantity:int)->float:
+    try:
+        return price * quantity
+    except Exception as e:
+        printError("calculating total pricing", str(e))
+        return
 
 #formats price to be 2 decimal places and rounds pricing
-def formatPrice(price):
+def formatPrice(price:float)->float:
     return "{:.2f}".format(round(price, 2))
 
 #prints output as directed in part 1 of assignment
 def printReceipt(custName, productName, price, quantity):
-    sys.stdout.write(custName + " purchased " + str(quantity) + " x " + productName + "\n")
+    sys.stdout.write(custName + " purchased " + str(quantity) + " x " +\
+            productName + "\n")
     sys.stdout.write("Unit price:  $" + str(formatPrice(price)) + "\n")
     sys.stdout.write("Total price: $" + str(formatPrice(calcTotalPrice(price, quantity)))\
             + "\n\n")
 
 #print the menu options
 def printMenu():
-    sys.stdout.write("Please enter an option:\n")
-    sys.stdout.write("1. Make a new purchase\n")
-    sys.stdout.write("2. Replace product list\n")
-    sys.stdout.write("3. Replace product prices\n")
-    sys.stdout.write("4. Display all existing customers\n")
-    sys.stdout.write("5. Display all products and prices\n\n")
-    sys.stdout.write("0. Exit\n\n")
-    sys.stdout.write("> ")
+    sys.stdout.write(\
+            "Please enter an option:\n" +\
+            "1. Make a new purchase\n" +\
+            "2. Replace product list\n" +\
+            "3. Replace product prices\n" +\
+            "4. Display all existing customers\n" +\
+            "5. Display all products and prices\n\n" +\
+            "0. Exit\n\n" +\
+            "> "\
+    )
 
 #ask for input to make order
 def makeOrder(listCustomers, listProducts, listPrices):
@@ -140,46 +147,48 @@ def makeOrder(listCustomers, listProducts, listPrices):
 #or maybe ask if classes are allowed to be used?
 """
 I'm not sure if this is the best way to do things because it uses globals.
-I think defining a product class would be better but that seems outside the
+defining a product class would be better but that seems outside the
 scope of this course at the moment.
-Perhaps using a dictionary could be good as well.
+Perhaps using a set/dictionary could be good as well since that'll force uniqueness
+but that'll also be weird with ordering.
 """
 def newProductList():
     #uses global in order to change the list of products
     global listProducts
-
     loop = True
+
     while loop:
+        #flags to check for errors
+        #flags reset every loop
+        flagUnique = False
+        flagAlpNum = False
+
         #get input
         sys.stdout.write("Please enter a new list of products separated by spaces:\n")
-        productInput = input().split()
+        try:
+            productInput = input().split()
+            #checks if user input is unique
+            #converts list into set, sets being unique
+            #if the length of the set is the same as the list
+            #then the list only has unique elements
+            if not len(set(productInput)) == len(productInput): 
+                flagUnique = True
+            #checks each item in the list to see if they are alphanumeric
+            for item in productInput:
+                if not item.isalnum():
+                    flagAlpNum = False
+        except Exception as e:
+            printError("creating a new product list", str(e))
 
-        #flags to check for errors
-        flagChar = False
-        flagUnique = False
-
-        #checks if user input is unique
-        if not len(set(productInput)) == len(productInput): 
-            flagUnique = True
-        #error checking to see if all items in products are alphanumeric
-        for item in productInput:
-            if not item.isalnum():
-                flagChar = True
-                #break out of for loop if one error detected
-                break
-        """
-        the flags were made and separated from the checks in order to make reading the code
-        easier
-        """
         #print relevant error messages to user
-        if flagChar:
-            sys.stdout.write("Please use alphanumeric characters with each product separated by spaces.\n")
         if flagUnique:
             sys.stdout.write("Please have every product be unqiue.\n")
-
-        #break out of loop if no errors/flags were detected
-        #this makes it so user cannot reenter input
-        if not flagChar and not flagUnique:
+        if flagAlpNum:
+            sys.stdout.write("Please have every product be one word and " +\
+                    "contain only alpha numeric characters.\n")
+        #break out of loop if no errors were detected or flags raised
+        #this makes it so user cannot reenter input once valid input is entered
+        if not flagUnique and not flagAlpNum:
             loop = False
         sys.stdout.write("\n")
 
@@ -194,22 +203,30 @@ def newPriceList():
     loop = True
     while loop:
         #get input
-        sys.stdout.write("Please enter a new list of prices separated by spaces and without the $ symbol: ")
-        priceInput = input().split()
+        sys.stdout.write("Please enter a new list of prices separated by spaces and " +\
+                "without the $ symbol: ")
+        priceInput = input().split(" ")
 
         flagDecimal = False
+        flagNeg = False
 
         #error checking to see if all items in products are alphanumeric
         for item in priceInput:
-            if not item.isnumeric:
+            if debug: print(is_float(item))
+            if is_float(item):
+                if float(item) < 0:
+                    flagNeg = True
+            else:
                 flagDecimal = True
-                #break out of for loop if one error detected
-                break
 
         #print relevant error messages to user
         if flagDecimal:
-            sys.stdout.write("Please use numbers for the prices.\n\n")
-        else:
+            sys.stdout.write("Please use numberic characters for the prices.\n")
+        if flagNeg:
+            sys.stdout.write("Please use positive numbers for the prices.\n")
+
+        #get out of loop if no error detected
+        if not flagDecimal and not flagNeg:
             loop = False
 
     #set new list
@@ -229,8 +246,10 @@ def printProducts(listProducts):
         sys.stdout.write("Current products: ")
         for i in range(len(listProducts)):
             sys.stdout.write(listProducts[i])
+            #separates items in list with commas
             if not i == len(listProducts) - 1:
                 sys.stdout.write(", ")
+            #if last item use full stop instead
             else:
                 sys.stdout.write(".\n\n")
 
