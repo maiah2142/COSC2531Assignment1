@@ -274,8 +274,22 @@ def neatPrintList(neatList:list, collection:str):
     
 
 #prints product list
-def printProducts(listProducts):
-    neatPrintList(listProducts, "products")
+def printProducts(listProducts, listPrices):
+    #neatPrintList(listProducts, "products")
+    if not listProducts:
+        sys.stdout.write("There are currently no products.") 
+    else:
+        try:
+            for i in range(len(listProducts)):
+                if i < len(listPrices):
+                    price = formatPrice(listPrices[i])
+                else:
+                    price = "No Price"
+                sys.stdout.write("{:<15}{:>9}\n".format(listProducts[i], price))
+        except Exception as e:
+            printError("printing product list", str(e))
+    sys.stdout.write("\n")
+
 
 def printCustomers(listCustomers):
     neatPrintList(listCustomers, "customers")
@@ -292,7 +306,7 @@ if __name__ == '__main__':
     if debug:
         listCustomers = ["John Smith", "Jane Doe"]
         listProducts = ["shortblack", "cappuccino", "latte"]
-        listPrices = [2.90, 1]
+        listPrices = [2.900000001, 1]
         print(listProducts)
 
     while True:
@@ -307,7 +321,7 @@ if __name__ == '__main__':
         elif option == "4":
             printCustomers(listCustomers)
         elif option == "5":
-            printProducts(listProducts)
+            printProducts(listProducts, listPrices)
         elif option == "0":
             sys.stdout.write("Goodbye.\n")
             quit()
