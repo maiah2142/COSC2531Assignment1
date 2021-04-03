@@ -305,7 +305,7 @@ if __name__ == '__main__':
         elif option == "3":
             newPriceList()
         elif option == "4":
-            printProducts(listCustomers)
+            printCustomers(listCustomers)
         elif option == "5":
             printProducts(listProducts)
         elif option == "0":
