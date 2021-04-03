@@ -7,62 +7,70 @@ def printError(desc:str, e:str)->str:
     sys.stdout.write("An error has occured with " + str(desc) + ", " + str(e) + ".\n")
 
 #get name input from user
-def getName():
+def getName()->str:
     """
-    While loop with an always true condition is used
-    in order infinitely loop the prompt to the user
-    if they enter it incorrectly.
+    Originally I used while(True) to keep a loop going on constantly asking for input until
+    broken out of the loop.
+    Currently a boolean declared "loop" initiated as "True" is used which I can later
+    change inside the while loop to the value of "False".
     """
     loop = True
     while loop:
+        #get input
         sys.stdout.write("Please enter the name of the customer: ")
         custName = input()
-        #Checks if input is all alpha characters.
-        if custName.isalpha():
+
+        flagChar = False
+        #Checks if input is all alpha characters by checking
+        #every character individually in the input string
+        for ch in custName:
+            if not (ch.isalpha() or ch.isspace()):
+                flagChar = True
+
+        #if states are separated (else isn't used)
+        #to keep structure consistent with other input validations,
+        #this layout is neater if I have to add more input validation later
+        if flagChar:
+            sys.stdout.write("The name must only contain alphabet characters or spaces.\n")
+        if not flagChar:
             loop = False
-        else:
-            sys.stdout.write("The name must start with a capital letter and the name " +\
-                    "must only contain alphabet characters or spaces.\n")
+
     return custName
 
 #get product input from user
 def getProduct(listProducts:list)->str:
-    """
-    While loop with an always true condition is used
-    in order infinitely loop the prompt to the user
-    if they enter it incorrectly.
-    """
     loop = True
     while loop:
+        #get input
         sys.stdout.write("Please enter the name of a product: ")
         productName = input()
+
         #checks to see if product exists in product list
         if productName in listProducts:
             loop = False
         else:
             sys.stdout.write("That product does not exist.\n")
+
     return productName
 
 #get product quantity input from user
-def getQuantity():
-    """
-    While loop with an always true condition is used
-    in order infinitely loop the prompt to the user
-    if they enter it incorrectly.
-    """
+def getQuantity()->int:
     loop = True
     while loop:
+        #get input
         sys.stdout.write("Please enter quantity you wish to order: ")
-        #checks if input is an integer
         quantity = input()
+
         try:
-            if quantity.isdigit():
+            #checks if input is a positive integer
+            if quantity.isdecimal():
                 loop = False
             else:
-                sys.stdout.write("Please enter a whole number.\n")
+                sys.stdout.write("Please enter a positive whole number.\n")
         except Exception as e:
-            printError("getting quantity input", str(e))
+            printError("getting quantity amouont", str(e))
             return
+
     return int(quantity)
 
 #checks to see if customer's name exists in the existing customers list
@@ -146,15 +154,14 @@ def makeOrder(listCustomers, listProducts, listPrices):
 #figure out later how to do this without classes
 #or maybe ask if classes are allowed to be used?
 """
-I'm not sure if this is the best way to do things because it uses globals.
-defining a product class would be better but that seems outside the
-scope of this course at the moment.
+Originally I used globals to call the lists outside of the main function's scope.
+I later found calling the list with .clear and .append worked too which is the current
+implementation.
 Perhaps using a set/dictionary could be good as well since that'll force uniqueness
 but that'll also be weird with ordering.
 """
+#TODO Empty input validation
 def newProductList():
-    #uses global in order to change the list of products
-    global listProducts
     loop = True
 
     while loop:
@@ -177,81 +184,101 @@ def newProductList():
             for item in productInput:
                 if not item.isalnum():
                     flagAlpNum = False
+                    break
         except Exception as e:
-            printError("creating a new product list", str(e))
+            printError("entering a new product list", str(e))
 
         #print relevant error messages to user
         if flagUnique:
             sys.stdout.write("Please have every product be unqiue.\n")
         if flagAlpNum:
             sys.stdout.write("Please have every product be one word and " +\
-                    "contain only alpha numeric characters.\n")
+                    "contain only alphabet or numeric characters.\n")
+        sys.stdout.write("\n")
         #break out of loop if no errors were detected or flags raised
         #this makes it so user cannot reenter input once valid input is entered
         if not flagUnique and not flagAlpNum:
             loop = False
-        sys.stdout.write("\n")
 
     #set new list
-    sys.stdout.write("New product list successfully set.\n\n")
-    listProducts = productInput
+    try:
+        listProducts.clear()
+        #if a new product list is made it makes sense to force a price list as well
+        listPrices.clear()
+        for item in productInput:
+            listProducts.append(str(item))
+        sys.stdout.write("New product list successfully set.\n\n")
+    except Exception as e:
+        printError("creating a new product list", str(e))
 
+#Done? Maybe.
 def newPriceList():
-    #uses global in order to change the list of prices
-    global listPrices
-
     loop = True
     while loop:
-        #get input
-        sys.stdout.write("Please enter a new list of prices separated by spaces and " +\
-                "without the $ symbol: ")
-        priceInput = input().split(" ")
-
         flagDecimal = False
-        flagNeg = False
+        flagNull = False
 
-        #error checking to see if all items in products are alphanumeric
-        for item in priceInput:
-            if debug: print(is_float(item))
-            if is_float(item):
-                if float(item) < 0:
-                    flagNeg = True
-            else:
-                flagDecimal = True
+        #get input
+        sys.stdout.write("Please enter a new list of prices separated by a space and " +\
+                "without the $ symbol: ")
+
+        try:
+            priceInput = input().split()
+            #loops through every item in user's input
+            for item in priceInput:
+                #checks if item is a decimal number
+                #removes a single decimal point and checks if
+                #string is all integers, if all integers it means
+                #only 1 or 0 decimals were inputted
+                if not item.replace(".", "", 1).isdecimal():
+                    flagDecimal = True
+                if item == "":
+                    flagNull = True
+        except Exception as e:
+            printError("entering a new price list", str(e))
 
         #print relevant error messages to user
         if flagDecimal:
-            sys.stdout.write("Please use numberic characters for the prices.\n")
-        if flagNeg:
-            sys.stdout.write("Please use positive numbers for the prices.\n")
+            sys.stdout.write("Please use numbers or decimal numbers without a $ symbol.\n")
+        if flagNull:
+            sys.stdout.write("Please do not have any null inputs.\n")
 
         #get out of loop if no error detected
-        if not flagDecimal and not flagNeg:
+        if not flagDecimal and not flagNull:
             loop = False
 
     #set new list
-    floatListPrices = []
-    for item in priceInput:
-        floatListPrices.append(float(item))
-    sys.stdout.write("New price list successfully set.\n\n")
-    listPrices = floatListPrices
+    try:
+        listPrices.clear()
+        for item in priceInput:
+            listPrices.append(float(item))
+        sys.stdout.write("New price list successfully set.\n\n")
+    except Exception as e:
+        printError("creating a new price list", str(e))
 
-#prints product list
-def printProducts(listProducts):
-    #check if list is empty
-    if not listProducts:
-        sys.stdout.write("There are currently no products.\n\n")
+def neatPrintList(neatList:list, collection:str):
+    if not neatList:
+        sys.stdout.write("There are currently no " + str(collection) + ".")
     else:
-        #print list as normal
-        sys.stdout.write("Current products: ")
-        for i in range(len(listProducts)):
-            sys.stdout.write(listProducts[i])
+        #range is used instead of "in list" to utilise index
+        sys.stdout.write("Current " + str(collection) + ": ")
+        for i in range(len(neatList)):
+            sys.stdout.write(neatList[i])
             #separates items in list with commas
-            if not i == len(listProducts) - 1:
+            if not i == len(neatList) - 1:
                 sys.stdout.write(", ")
             #if last item use full stop instead
             else:
-                sys.stdout.write(".\n\n")
+                sys.stdout.write(".")
+    sys.stdout.write("\n\n")
+    
+
+#prints product list
+def printProducts(listProducts):
+    neatPrintList(listProducts, "products")
+
+def printCustomers(listCustomers):
+    neatPrintList(listCustomers, "customers")
 
 #main init
 if __name__ == '__main__':
@@ -277,6 +304,8 @@ if __name__ == '__main__':
             newProductList()
         elif option == "3":
             newPriceList()
+        elif option == "4":
+            printProducts(listCustomers)
         elif option == "5":
             printProducts(listProducts)
         elif option == "0":
