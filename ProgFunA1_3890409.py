@@ -122,18 +122,9 @@ def printReceipt(custName, productName, price, quantity):
     sys.stdout.write("Total price: $" + str(formatPrice(calcTotalPrice(price, quantity)))\
             + "\n\n")
 
-#print the menu options
-def printMenu():
-    sys.stdout.write(\
-            "Please enter an option:\n" +\
-            "1. Make a new purchase\n" +\
-            "2. Replace product list\n" +\
-            "3. Replace product prices\n" +\
-            "4. Display all existing customers\n" +\
-            "5. Display all products and prices\n\n" +\
-            "0. Exit\n\n" +\
-            "> "\
-    )
+#
+def addCustomer(name:str, listCustomers:list):
+    listCustomers.append(name)
 
 #ask for input to make order
 def makeOrder(listCustomers, listProducts, listPrices):
@@ -144,12 +135,16 @@ def makeOrder(listCustomers, listProducts, listPrices):
     sys.stdout.write("\n")
 
     #boolean to check user is existing customer
-    discountCustomer = isExistingCustomer(custName, listCustomers)
+    existCust = isExistingCustomer(custName, listCustomers)
 
     #print receipt output
     printReceipt(custName, productName,\
-            calcUnitPrice(discountCustomer, productName, listProducts, listPrices),\
+            calcUnitPrice(existCust, productName, listProducts, listPrices),\
             quantity)
+
+    #add customer to customer list if they are new
+    if not existCust:
+        addCustomer(custName, listCustomers)
 
 #figure out later how to do this without classes
 #or maybe ask if classes are allowed to be used?
@@ -293,6 +288,19 @@ def printProducts(listProducts, listPrices):
 
 def printCustomers(listCustomers):
     neatPrintList(listCustomers, "customers")
+
+#print the menu options
+def printMenu():
+    sys.stdout.write(\
+            "Please enter an option:\n" +\
+            "1. Make a new purchase\n" +\
+            "2. Replace product list\n" +\
+            "3. Replace product prices\n" +\
+            "4. Display all existing customers\n" +\
+            "5. Display all products and prices\n\n" +\
+            "0. Exit\n\n" +\
+            "> "\
+    )
 
 #main init
 if __name__ == '__main__':
