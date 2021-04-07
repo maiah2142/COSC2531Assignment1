@@ -6,35 +6,76 @@ debug = True
 def printError(desc:str, e:str)->str:
     sys.stdout.write("An error has occured with " + str(desc) + ", " + str(e) + ".\n")
 
+#formats price to be 2 decimal places and rounds pricing
+def formatPrice(price:float)->float:
+    return "{:.2f}".format(round(price, 2))
+
+def bulkValidation(*validBools:bool):
+    for check in validBools:
+        if not check:
+            return False
+    return True
+
+#Checks if name is all alpha characters
+def nameValid(name:str, errMsg:str = None)->bool:
+    #checks every character individually in the input string
+    for ch in name:
+        if not (ch.isalpha() or ch.isspace()):
+            if errMsg: sys.stdout.write(errMsg)
+            return False    #return False if invalid
+    return True             #return True if valid
+
+#Checks if product's name contains any spaces
+def prodNameValid(prod:str, errMsg:str = None)->bool:
+    #checks every character individually in the input string
+    for ch in prod:
+        if ch.isspace():
+            if errMsg: sys.stdout.write(errMsg)
+            return False    #return False if invalid
+    return True             #return True if valid
+
+def existValid(item, checkList:list, errMsg:str = None)->bool:
+    if not item in checkList:
+        if errMsg: sys.stdout.write(errMsg)
+        return False
+    return True
+
+def naturalNumValid(num:int, errMsg:str = None)->bool:
+    if not num.isdecimal() or num == 0:
+        if errMsg: sys.stdout.write(errMsg)
+        return False
+    return True
+
+def indexValid(index:int, checkList:list)->bool:
+    if index < 0 or index > len(checkList) - 1:
+        return False
+    return True
+
+def nullValid(item)->bool:
+    if item == None:
+        return False
+    return True
+
+
+"""
+Originally I used while(True) to keep a loop going on constantly asking for input until
+broken out of the loop.
+Currently a boolean declared "loop" initiated as "True" is used which I can later
+change inside the while loop to the value of "False".
+"""
 #get name input from user
 def getName()->str:
-    """
-    Originally I used while(True) to keep a loop going on constantly asking for input until
-    broken out of the loop.
-    Currently a boolean declared "loop" initiated as "True" is used which I can later
-    change inside the while loop to the value of "False".
-    """
     loop = True
     while loop:
         #get input
         sys.stdout.write("Please enter the name of the customer: ")
         custName = input()
-
-        flagChar = False
-        #Checks if input is all alpha characters by checking
-        #every character individually in the input string
-        for ch in custName:
-            if not (ch.isalpha() or ch.isspace()):
-                flagChar = True
-
-        #if states are separated (else isn't used)
-        #to keep structure consistent with other input validations,
-        #this layout is neater if I have to add more input validation later
-        if flagChar:
-            sys.stdout.write("The name must only contain alphabet characters or spaces.\n")
-        if not flagChar:
+        if bulkValidation(\
+                nameValid(custName,\
+                    "The name must only contain alphabet characters or spaces.\n")
+        ):
             loop = False
-
+    #finally return name
     return custName
 
 #get product input from user
@@ -44,13 +85,14 @@ def getProduct(listProducts:list)->str:
         #get input
         sys.stdout.write("Please enter the name of a product: ")
         productName = input()
-
-        #checks to see if product exists in product list
-        if productName in listProducts:
+        if bulkValidation(\
+                prodNameValid(productName,\
+                    "The product's name must not contain any spaces."),\
+                existValid(productName, listProducts,\
+                    "That product does not exist.\n")\
+        ):
             loop = False
-        else:
-            sys.stdout.write("That product does not exist.\n")
-
+    #finally return product
     return productName
 
 #get product quantity input from user
@@ -60,43 +102,24 @@ def getQuantity()->int:
         #get input
         sys.stdout.write("Please enter quantity you wish to order: ")
         quantity = input()
-
-        try:
-            #checks if input is a positive integer
-            if quantity.isdecimal():
-                loop = False
-            else:
-                sys.stdout.write("Please enter a positive whole number.\n")
-        except Exception as e:
-            printError("getting quantity amouont", str(e))
-            return
-
+        if bulkValidation(\
+                naturalNumValid(quantity,\
+                    "Please enter a positive whole number.\n")
+        ):
+            loop = False
+    #finally return quantity
     return int(quantity)
-
-#checks to see if customer's name exists in the existing customers list
-def isExistingCustomer(custName, listCustomers):
-    if debug: print(listCustomers)
-    #true if existing, false if new
-    if custName in listCustomers:
-        if debug: print("Existing!\n")
-        return True
-    if debug: print("Not existing!\n")
-    return False
 
 #calculate the price of single product with discount
 def calcUnitPrice(existingCustomer, productName, listProducts, listPrices):
     #get product index
     index = listProducts.index(productName)
-    #get price using product index
-    try:
-        if index > len(listPrices) or index < 0:
-            #if no price listed, outside of list
-            return
-        else:
-            price = listPrices[index]
-    except Exception as e:
-        printError("calculating pricing", str(e))
+
+    if not indexValid:
         return
+    else:
+        price = listPrices[index]
+
     #if existing customer apply 10% discount
     if existingCustomer:
         price *= 0.9
@@ -110,41 +133,46 @@ def calcTotalPrice(price:float, quantity:int)->float:
         printError("calculating total pricing", str(e))
         return
 
-#formats price to be 2 decimal places and rounds pricing
-def formatPrice(price:float)->float:
-    return "{:.2f}".format(round(price, 2))
-
 #prints output as directed in part 1 of assignment
 def printReceipt(custName, productName, price, quantity):
-    sys.stdout.write(custName + " purchased " + str(quantity) + " x " +\
-            productName + "\n")
-    sys.stdout.write("Unit price:  $" + str(formatPrice(price)) + "\n")
-    sys.stdout.write("Total price: $" + str(formatPrice(calcTotalPrice(price, quantity)))\
-            + "\n\n")
-
-#
-def addCustomer(name:str, listCustomers:list):
-    listCustomers.append(name)
+    sys.stdout.write(\
+            custName + " purchased " + str(quantity) + " x " + productName + "\n" +\
+            "Unit price:  $" + str(formatPrice(price)) + "\n" +\
+            "Total price: $" + str(formatPrice(calcTotalPrice(price, quantity)))\
+            + "\n"\
+    )
 
 #ask for input to make order
 def makeOrder(listCustomers, listProducts, listPrices):
-    #get input from customer
-    custName = getName()
-    productName = getProduct(listProducts)
-    quantity = getQuantity()
+    loop = True
     sys.stdout.write("\n")
 
-    #boolean to check user is existing customer
-    existCust = isExistingCustomer(custName, listCustomers)
+    #get input from customer
+    custName = getName()
+    existCust = custName in listCustomers
+    while loop:
+        productName = getProduct(listProducts)
+        unitPrice = calcUnitPrice(existCust, productName, listProducts, listPrices)
+        try:
+            if unitPrice == None:
+                sys.stdout.write("That product does not have a price.\n")
+            elif unitPrice < 0:
+                sys.stdout.write("The product's price is invalid.\n")
+            elif unitPrice == 0 and not existCust:
+                sys.stdout.write("Free products are not available to new customers.\n")
+            else:
+                loop = False
+        except Exception as e:
+            printError("making an order", str(e))
+    quantity = getQuantity()
 
+    sys.stdout.write("\n")
     #print receipt output
-    printReceipt(custName, productName,\
-            calcUnitPrice(existCust, productName, listProducts, listPrices),\
-            quantity)
-
+    printReceipt(custName, productName, unitPrice, quantity)
     #add customer to customer list if they are new
     if not existCust:
-        addCustomer(custName, listCustomers)
+        listCustomers.append(custName)
+    sys.stdout.write("\n\n")
 
 #figure out later how to do this without classes
 #or maybe ask if classes are allowed to be used?
@@ -164,6 +192,7 @@ def newProductList():
         #flags reset every loop
         flagUnique = False
         flagAlpNum = False
+        flagNull = False
 
         #get input
         sys.stdout.write("Please enter a new list of products separated by spaces:\n")
@@ -199,7 +228,6 @@ def newProductList():
     try:
         listProducts.clear()
         #if a new product list is made it makes sense to force a price list as well
-        listPrices.clear()
         for item in productInput:
             listProducts.append(str(item))
         sys.stdout.write("New product list successfully set.\n\n")
@@ -224,8 +252,10 @@ def newPriceList():
                 #checks if item is a decimal number
                 #removes a single decimal point and checks if
                 #string is all integers, if all integers it means
-                #only 1 or 0 decimals were inputted
-                if not item.replace(".", "", 1).isdecimal():
+                #only 1 or 0 decimals were inputted,
+                #negative sign was added to validation as part 3.1 implies negative
+                #values are valid input, but processed invalidly in different areas
+                if not item.replace(".", "", 1).replace("-", "", 1).isdecimal():
                     flagDecimal = True
                 if item == "":
                     flagNull = True
@@ -266,28 +296,60 @@ def neatPrintList(neatList:list, collection:str):
             else:
                 sys.stdout.write(".")
     sys.stdout.write("\n\n")
-    
 
 #prints product list
-def printProducts(listProducts, listPrices):
+def printProducts(listProducts:list, listPrices:list, dictStock:dict):
     #neatPrintList(listProducts, "products")
+    padProd = "{:<15}"
+    padPrice = "{:>9}"
+    padStock = "{:>6}"
+    formatting = padProd + padPrice + padStock + "\n"
+
     if not listProducts:
         sys.stdout.write("There are currently no products.") 
     else:
         try:
+            sys.stdout.write(formatting.format("Products", "Price", "Stock"))
             for i in range(len(listProducts)):
-                if i < len(listPrices):
-                    price = formatPrice(listPrices[i])
-                else:
+                if i > len(listPrices) - 1 or listPrices[i] < 0:
                     price = "No Price"
-                sys.stdout.write("{:<15}{:>9}\n".format(listProducts[i], price))
+                else:
+                    price = formatPrice(listPrices[i])
+                prod = listProducts[i]
+                stock = dictStock[prod]
+                sys.stdout.write(formatting.format(prod, price, stock))
         except Exception as e:
             printError("printing product list", str(e))
     sys.stdout.write("\n")
 
 
-def printCustomers(listCustomers):
+def printCustomers(listCustomers:list):
     neatPrintList(listCustomers, "customers")
+
+def getReplenish()->int:
+    loop = True
+    while loop:
+        sys.stdout.write("Please enter the  quantity you wish each product be stocked to: ")
+        quantity = input()
+        if not quantity.isdecimal():
+            sys.stdout.write("Please enter a whole number greater than or equal to 0.\n")
+        else:
+            loop = False
+    try:
+        return int(quantity)
+    except Exception as e:
+        printError("getting input for replenishing", str(e))
+    return
+
+def replenish(dictStock:dict, listProducts:list):
+    quantity = getReplenish()
+    if quantity == None:
+        printError("replenishing stock", "")
+    else:
+        dictStock.clear()
+        for prod in listProducts:
+            dictStock[prod] = quantity
+        sys.stdout.write("All products successfully replenished.\n\n")
 
 #print the menu options
 def printMenu():
@@ -297,7 +359,8 @@ def printMenu():
             "2. Replace product list\n" +\
             "3. Replace product prices\n" +\
             "4. Display all existing customers\n" +\
-            "5. Display all products and prices\n\n" +\
+            "5. Display all products and prices\n" +\
+            "6. Replenish stock\n\n" +\
             "0. Exit\n\n" +\
             "> "\
     )
@@ -310,12 +373,16 @@ if __name__ == '__main__':
     listProducts = []
     #temporary product list
     listPrices = []
+    #temporary stock dictionary
+    dictStock = {}
 
     if debug:
         listCustomers = ["John Smith", "Jane Doe"]
         listProducts = ["shortblack", "cappuccino", "latte"]
-        listPrices = [2.900000001, 1]
+        listPrices = [-1, 12.5555]
         print(listProducts)
+        for prod in listProducts:
+            dictStock[prod] = 10
 
     while True:
         printMenu()
@@ -329,7 +396,9 @@ if __name__ == '__main__':
         elif option == "4":
             printCustomers(listCustomers)
         elif option == "5":
-            printProducts(listProducts, listPrices)
+            printProducts(listProducts, listPrices, dictStock)
+        elif option == "6":
+            replenish(dictStock, listProducts)
         elif option == "0":
             sys.stdout.write("Goodbye.\n")
             quit()
