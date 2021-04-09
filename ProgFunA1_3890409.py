@@ -10,11 +10,25 @@ def printError(desc:str, e:str)->str:
 def formatPrice(price:float)->float:
     return "{:.2f}".format(round(price, 2))
 
-def bulkValidation(*validBools:bool):
+#formats list neatly as a print
+def neatPrintList(neatList:list):
+    if neatList:
+        #range is used instead of "in list" to utilise index
+        for i in range(len(neatList)):
+            sys.stdout.write(neatList[i])
+            #separates items in list with commas
+            if not i == len(neatList) - 1:
+                sys.stdout.write(", ")
+            #if last item use full stop instead
+            else:
+                sys.stdout.write(".")
+
+def bulkValidation(*validBools:bool)->bool:
     for check in validBools:
         if not check:
             return False
     return True
+
 
 #Checks if name is all alpha characters
 def nameValid(name:str, errMsg:str = None)->bool:
@@ -34,28 +48,39 @@ def prodNameValid(prod:str, errMsg:str = None)->bool:
             return False    #return False if invalid
     return True             #return True if valid
 
+#Checks if item exists in the list
 def existValid(item, checkList:list, errMsg:str = None)->bool:
     if not item in checkList:
         if errMsg: sys.stdout.write(errMsg)
         return False
     return True
 
+#Checks if the number is within the mathematical set N (natural integers)
 def naturalNumValid(num:int, errMsg:str = None)->bool:
     if not num.isdecimal() or num == 0:
         if errMsg: sys.stdout.write(errMsg)
         return False
     return True
 
-def indexValid(index:int, checkList:list)->bool:
+#Checks if an integer, index, is within the bounds of a list's size
+def indexValid(index:int, checkList:list, errMsg:str = None)->bool:
     if index < 0 or index > len(checkList) - 1:
+        if errMsg: sys.stdout.write(errMsg)
         return False
     return True
 
-def nullValid(item)->bool:
+#Checks for if the item is null (None)
+def nullValid(item, errMsg:str = None)->bool:
     if item == None:
+        if errMsg: sys.stdout.write(errMsg)
         return False
     return True
 
+def stockUpdateValidation(product:str, quantity:int, stocks:dict, errMsg:str = None)->bool:
+    if quantity > stocks[product]:
+        if errMsg: sys.stdout.write(errMsg)
+        return False
+    return True
 
 """
 Originally I used while(True) to keep a loop going on constantly asking for input until
@@ -115,7 +140,7 @@ def calcUnitPrice(existingCustomer, productName, listProducts, listPrices):
     #get product index
     index = listProducts.index(productName)
 
-    if not indexValid:
+    if not indexValid(index, listPrices):
         return
     else:
         price = listPrices[index]
@@ -142,8 +167,45 @@ def printReceipt(custName, productName, price, quantity):
             + "\n"\
     )
 
+def updateProdStock(product:str, quantity:int, dictStock:dict):
+    dictStock[product] = dictStock[product] - quantity
+
+def updateTotalSpend(dictTotalSpend:dict, name:str, price:float):
+    if not dictTotalSpend.get(name):
+        dictTotalSpend[name] = price
+    else:
+        dictTotalSpend[name] = dictTotalSpend.get(name) + price
+
+def getMostValued(dictTotalSpend:dict, listCustomers:list)->list:
+    listNames = []
+    highest = 0
+    for names in listCustomers:
+        amount = dictTotalSpend.get(names)
+        if amount:
+            if amount == highest:
+                listNames.append(names)
+            elif amount > highest:
+                listNames.clear()
+                listNames.append(names)
+                highest = amount
+    return listNames
+
+def printMostValued(dictTotalSpend:dict, listCustomers:list):
+    cust = getMostValued(dictTotalSpend, listCustomers)
+    if not cust:
+        sys.stdout.write("No customer has made a purchase.")
+    else:
+        sys.stdout.write("The most valuable customer")
+        if len(cust) == 1:
+            sys.stdout.write(" is: ")
+        else:
+            sys.stdout.write("s are: ")
+        neatPrintList(cust)
+    sys.stdout.write("\n\n")
+
 #ask for input to make order
-def makeOrder(listCustomers, listProducts, listPrices):
+def makeOrder(listCustomers:list, listProducts:list, listPrices:list,\
+        dictStock:dict, dictTotalSpend:dict):
     loop = True
     sys.stdout.write("\n")
 
@@ -164,7 +226,15 @@ def makeOrder(listCustomers, listProducts, listPrices):
                 loop = False
         except Exception as e:
             printError("making an order", str(e))
-    quantity = getQuantity()
+
+    loop = True
+    while loop:
+        quantity = getQuantity()
+        if stockUpdateValidation(productName, quantity, dictStock,\
+                "Unfortunately we only have " + str(dictStock.get(productName)) +\
+                " in stock.\nWould you like to cancel the current order?\n"):
+            updateProdStock(productName, quantity, dictStock)
+            loop = False
 
     sys.stdout.write("\n")
     #print receipt output
@@ -172,7 +242,8 @@ def makeOrder(listCustomers, listProducts, listPrices):
     #add customer to customer list if they are new
     if not existCust:
         listCustomers.append(custName)
-    sys.stdout.write("\n\n")
+    updateTotalSpend(dictTotalSpend, custName, calcTotalPrice(unitPrice, quantity))
+    sys.stdout.write("\n")
 
 #figure out later how to do this without classes
 #or maybe ask if classes are allowed to be used?
@@ -281,22 +352,6 @@ def newPriceList():
     except Exception as e:
         printError("creating a new price list", str(e))
 
-def neatPrintList(neatList:list, collection:str):
-    if not neatList:
-        sys.stdout.write("There are currently no " + str(collection) + ".")
-    else:
-        #range is used instead of "in list" to utilise index
-        sys.stdout.write("Current " + str(collection) + ": ")
-        for i in range(len(neatList)):
-            sys.stdout.write(neatList[i])
-            #separates items in list with commas
-            if not i == len(neatList) - 1:
-                sys.stdout.write(", ")
-            #if last item use full stop instead
-            else:
-                sys.stdout.write(".")
-    sys.stdout.write("\n\n")
-
 #prints product list
 def printProducts(listProducts:list, listPrices:list, dictStock:dict):
     #neatPrintList(listProducts, "products")
@@ -323,8 +378,9 @@ def printProducts(listProducts:list, listPrices:list, dictStock:dict):
     sys.stdout.write("\n")
 
 
+#TODO
 def printCustomers(listCustomers:list):
-    neatPrintList(listCustomers, "customers")
+    neatPrintList(listCustomers)
 
 def getReplenish()->int:
     loop = True
@@ -360,7 +416,10 @@ def printMenu():
             "3. Replace product prices\n" +\
             "4. Display all existing customers\n" +\
             "5. Display all products and prices\n" +\
-            "6. Replenish stock\n\n" +\
+            "6. Replenish stock\n" +\
+            "7. Display most valuable customer(s)\n" +\
+            "8. Display previous order information\n" +\
+            "\n" +\
             "0. Exit\n\n" +\
             "> "\
     )
@@ -375,6 +434,10 @@ if __name__ == '__main__':
     listPrices = []
     #temporary stock dictionary
     dictStock = {}
+    
+    dictPurchaseHistory = {}
+    #dictionary to keep track of amount spent by each customer
+    dictTotalSpend = {}
 
     if debug:
         listCustomers = ["John Smith", "Jane Doe"]
@@ -388,7 +451,7 @@ if __name__ == '__main__':
         printMenu()
         option = input()
         if   option == "1":
-            makeOrder(listCustomers, listProducts, listPrices)
+            makeOrder(listCustomers, listProducts, listPrices, dictStock, dictTotalSpend)
         elif option == "2":
             newProductList()
         elif option == "3":
@@ -399,6 +462,8 @@ if __name__ == '__main__':
             printProducts(listProducts, listPrices, dictStock)
         elif option == "6":
             replenish(dictStock, listProducts)
+        elif option == "7":
+            printMostValued(dictTotalSpend, listCustomers)
         elif option == "0":
             sys.stdout.write("Goodbye.\n")
             quit()
