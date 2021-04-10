@@ -3,6 +3,8 @@ import sys
 debug = True
 
 #template for displaying error messages
+#ideally the user never sees this
+#used to debug and make sure the program doesn't always hard crash
 def printError(desc:str, e:str)->str:
     sys.stdout.write("An error has occured with " + str(desc) + ", " + str(e) + ".\n")
 
@@ -10,7 +12,7 @@ def printError(desc:str, e:str)->str:
 def formatPrice(price:float)->float:
     return "{:.2f}".format(round(price, 2))
 
-#formats list neatly as a print
+#formats a neat print for lists
 def neatPrintList(neatList:list):
     if neatList:
         #range is used instead of "in list" to utilise index
@@ -23,12 +25,14 @@ def neatPrintList(neatList:list):
             else:
                 sys.stdout.write(".")
 
+#for loop that takes in a variable number of booleans
+#and checks if they are all True
+#it's basically an And gate
 def bulkValidation(*validBools:bool)->bool:
     for check in validBools:
         if not check:
-            return False
-    return True
-
+            return False    #return False if a single False is detected
+    return True             #return True if all True
 
 #Checks if name is all alpha characters
 def nameValid(name:str, errMsg:str = None)->bool:
@@ -76,6 +80,7 @@ def nullValid(item, errMsg:str = None)->bool:
         return False
     return True
 
+#TODO redo without dictionary
 def stockUpdateValidation(product:str, quantity:int, stocks:dict, errMsg:str = None)->bool:
     if quantity > stocks[product]:
         if errMsg: sys.stdout.write(errMsg)
@@ -203,9 +208,50 @@ def printMostValued(dictTotalSpend:dict, listCustomers:list):
         neatPrintList(cust)
     sys.stdout.write("\n\n")
 
+def updateOrderHistory(dictOrderHistory:dict, name:str, prod:str, quantity:int):
+    if not dictOrderHistory.get(name):
+        dictTempVal = {prod: quantity}
+        dictOrderHistory[name] = dictTempVal 
+    elif not dictOrderHistory.get(name).get(prod):
+        dictOrderHistory[name][prod] = quantity
+    else:
+        oldVal = dictOrderHistory.get(name).get(prod)
+        dictOrderHistory[name][prod] = oldVal + quantity
+
+def getOrderHistory(dictOrderHistory:dict, prod:str, name:str)->int:
+    if not dictOrderHistory.get(name):
+        return 0
+    elif not dictOrderHistory.get(name).get(prod):
+        return 0
+    else:
+        return dictOrderHistory.get(name).get(prod)
+    return
+
+#TODO data validation
+def printOrderHistory(listCustomers:list, listProducts:list, dictOrderHistory:dict):
+    padName = 15
+    padProd = 8
+    formName = "{:<" + str(padName) + "}"
+    formProd = "{:>" + str(padProd) + "}"
+
+    #print product header
+    sys.stdout.write(formName.format("") + " ")
+    for prod in listProducts:
+        sys.stdout.write(" " + formProd.format(prod)[:padProd])
+    sys.stdout.write("\n")
+
+    #print name header and purchase quantities
+    for name in listCustomers:
+        sys.stdout.write(formName.format(name) + " ")
+        for prod in listProducts:
+            sys.stdout.write(" " + formProd.format(getOrderHistory(dictOrderHistory, prod, name)))
+        sys.stdout.write("\n")
+    sys.stdout.write("\n")
+
+
 #ask for input to make order
 def makeOrder(listCustomers:list, listProducts:list, listPrices:list,\
-        dictStock:dict, dictTotalSpend:dict):
+        dictStock:dict, dictTotalSpend:dict, dictOrderHistory:dict):
     loop = True
     sys.stdout.write("\n")
 
@@ -243,6 +289,7 @@ def makeOrder(listCustomers:list, listProducts:list, listPrices:list,\
     if not existCust:
         listCustomers.append(custName)
     updateTotalSpend(dictTotalSpend, custName, calcTotalPrice(unitPrice, quantity))
+    updateOrderHistory(dictOrderHistory, custName, productName, quantity)
     sys.stdout.write("\n")
 
 #figure out later how to do this without classes
@@ -378,9 +425,14 @@ def printProducts(listProducts:list, listPrices:list, dictStock:dict):
     sys.stdout.write("\n")
 
 
-#TODO
+#prints all existing customers
 def printCustomers(listCustomers:list):
-    neatPrintList(listCustomers)
+    if not listCustomers:
+        sys.stdout.write("There are currently no existing customers.")
+    else:
+        sys.stdout.write("Existing customers:")
+        neatPrintList(listCustomers)
+    sys.stdout.write("\n\n")
 
 def getReplenish()->int:
     loop = True
@@ -435,14 +487,14 @@ if __name__ == '__main__':
     #temporary stock dictionary
     dictStock = {}
     
-    dictPurchaseHistory = {}
+    dictOrderHistory = {}
     #dictionary to keep track of amount spent by each customer
     dictTotalSpend = {}
 
     if debug:
         listCustomers = ["John Smith", "Jane Doe"]
         listProducts = ["shortblack", "cappuccino", "latte"]
-        listPrices = [-1, 12.5555]
+        listPrices = [1, 12.5555, 2.01]
         print(listProducts)
         for prod in listProducts:
             dictStock[prod] = 10
@@ -451,7 +503,7 @@ if __name__ == '__main__':
         printMenu()
         option = input()
         if   option == "1":
-            makeOrder(listCustomers, listProducts, listPrices, dictStock, dictTotalSpend)
+            makeOrder(listCustomers, listProducts, listPrices, dictStock, dictTotalSpend, dictOrderHistory)
         elif option == "2":
             newProductList()
         elif option == "3":
@@ -464,6 +516,8 @@ if __name__ == '__main__':
             replenish(dictStock, listProducts)
         elif option == "7":
             printMostValued(dictTotalSpend, listCustomers)
+        elif option == "8":
+            printOrderHistory(listCustomers, listProducts, dictOrderHistory)
         elif option == "0":
             sys.stdout.write("Goodbye.\n")
             quit()
