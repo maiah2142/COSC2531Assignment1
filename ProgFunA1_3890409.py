@@ -104,6 +104,14 @@ def noNullValid(item, errMsg:str = None)->bool:
         return False
     return True
 
+#Checks for if the item not "None"
+def noNoneValid(item, errMsg:str = None)->bool:
+    if item == None:
+        if errMsg: sys.stdout.write(errMsg)
+        return False
+    return True
+
+
 #Checks if item is alphanumeric
 def alphanumValid(item, errMsg:str = None)->bool:
     if not item.isalnum:
@@ -283,24 +291,32 @@ def makeOrder(listCustomers:list, listProducts:list, listPrices:list,\
             loop = False
         """
         if bulkValidation(\
-                noNullValid(unitPrice,\
+                #Checks for empty price, though this should never happen
+                noNoneValid(unitPrice,\
                         "That product does not have a price.\n"),\
+                #Requirement 3.1
+                #checks if the price is less than 0
                 valueCompareValid(0, unitPrice,\
                         "The product's price is invalid.\n"),\
+                #Requirement 3.4
+                #checks if there is the product has at least 1 in stock
                 valueCompareValid(1, getProdStock(productName, dictStock),\
                         "That product is currently out of stock.\n"),\
+                #Requirement 3.2
+                #checks to see if the customer can purchase free products
                 freeProductValid(unitPrice, existCust,\
                         "Free products are not available to new customers.\n")):
             loop = False
 
-    #TODO
     #loop to ask for input if input was invalid
     loop = True
     while loop:
         quantity = getQuantity()
         stockRemaining = str(getProdStock(productName, dictStock))
+        #validation if the customer is attempting to purchase
+        #more than there is stock
         if valueCompareValid(quantity, getProdStock(productName, dictStock),\
-                "Unfortunately we only have " + stockRemaining +\
+                "Unfortunately there is only " + stockRemaining +\
                 " in stock.\nYou may only order up to " + stockRemaining +\
                 " of that product.\n"):
             dictStock[productName] = dictStock[productName] - quantity
@@ -313,7 +329,9 @@ def makeOrder(listCustomers:list, listProducts:list, listPrices:list,\
     #add customer to customer list if they are new
     if not existCust:
         listCustomers.append(custName)
+    #record the amount spent by customer
     updateTotalSpend(dictTotalSpend, custName, calcTotalPrice(unitPrice, quantity))
+    #record what and how much the customer ordered
     updateOrderHistory(dictOrderHistory, custName, productName, quantity)
     sys.stdout.write("\n")
 
@@ -401,7 +419,7 @@ def printCustomers(listCustomers:list):
     if not listCustomers:
         sys.stdout.write("There are currently no existing customers.")
     else:
-        sys.stdout.write("Existing customers:")
+        sys.stdout.write("Existing customers: ")
         neatPrintList(listCustomers)
     sys.stdout.write("\n\n")
 
@@ -669,6 +687,6 @@ if __name__ == '__main__':
             printMostValued(dictTotalSpend, listCustomers)
         elif option == "8":
             printOrderHistory(listCustomers, listProducts, dictOrderHistory)
-        elif option == "0":
+        elif option == "0": #Requirement 2.8
             sys.stdout.write("Goodbye.\n")
             quit()
